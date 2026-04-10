@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Åland: Circular Economy Pioneer</title>
+    <style>
+        /* --- RESET & BASICS --- */
+        :root {
+            --primary: #00796b;
+            --primary-light: #48a999;
+            --accent: #ff9100;
+            --accent-dim: rgba(255, 145, 0, 0.3);
+            --bg-dark: #263238;
+            --text-light: #eceff1;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- PRESENTATION SCREEN MANAGER --- */
+        .presentation-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .presentation-screen.active-screen {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 5;
+        }
+
+        .slide-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('image_0.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .presentation-screen h1 {
+            font-size: 4.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+        }
+
+        .presentation-screen h2 {
+            font-size: 2rem;
+            color: var(--primary-light);
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .presenter-names {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 50px;
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 30px;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* --- BACKGROUND MAP --- */
+        #main-viewport {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('image_0.jpg');
+            background-size: cover;
+            background-position: center;
+            transition: filter 0.5s ease, transform 0.8s ease;
+            cursor: pointer;
+        }
+
+        #main-viewport.blur {
+            filter: blur(8px) brightness(0.5);
+            transform: scale(1.05);
+        }
+
+        /* --- OVERLAY & HOTSPOTS --- */
+        #interactive-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            transition: opacity 0.5s ease, pointer-events 0.5s ease;
+        }
+
+        #interactive-overlay.hidden { 
+            opacity: 0; 
+            pointer-events: none;
+        }
+
+        .hotspot-trigger {
+            position: absolute;
+            width: auto;
+            height: 50px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px 0 0;
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .hotspot-trigger:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.4));
+        }
+
+        #trigger-real-estate { top: 50%; left: 18%; }
+        #trigger-hotels      { top: 56%; left: 60%; }
+        #trigger-services    { top: 60%; left: 42%; }
+
+        .pulse {
+            position: relative;
+            width: 25px; height: 25px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .pulse::after {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            background-color: var(--accent);
+            border-radius: 50%;
+            animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.7; }
+            80%, 100% { transform: scale(3.5); opacity: 0; }
+        }
+
+        .hotspot-label {
+            position: relative;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            white-space: nowrap;
+        }
+
+        #scene-intro-map {
+            position: absolute;
+            bottom: 10%;
+            left: 5%;
+            width: 90%;
+            text-align: left;
+            z-index: 15;
+        }
+
+        #scene-intro-map h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            letter-spacing: -1px;
+        }
+
+        #scene-intro-map p {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
+            margin-top: 5px;
+            max-width: 600px;
+        }
+
+        /* --- CONTENT PANELS --- */
+        .content-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 85%;
+            max-width: 1100px;
+            height: 75%;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .content-panel.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .panel-image {
+            background-size: cover;
+            background-position: center;
+        }
+
+        .panel-text {
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            overflow-y: auto; 
+        }
+
+        .panel-text h2 {
+            font-size: 2.5rem;
+            color: white;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .panel-text p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .panel-text ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .panel-text li {
+            margin-bottom: 15px;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .panel-text li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .highlight-stat {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* --- NEW: STAT GRIDS (REPLACES BARS) --- */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-grid.three-col {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .stat-box.full-width {
+            grid-column: span 2;
+        }
+
+        .stat-box .number-wrapper {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-box .prefix, .stat-box .suffix {
+            font-size: 1.5rem;
+            margin: 0 2px;
+            opacity: 0.8;
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.3;
+        }
+
+        /* --- NEW: VERTICAL TIMELINES (REPLACES BARS) --- */
+        .timeline-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .timeline-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.8);
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .timeline {
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            margin-left: 10px;
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timeline-node {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timeline-node::before {
+            content: '';
+            position: absolute;
+            left: -27px; /* Centers dot on the border */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .timeline-node.historical::before {
+            background: rgba(255,255,255,0.4);
+            box-shadow: none;
+        }
+
+        .timeline-year {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .timeline-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .timeline-node:not(.historical) .timeline-year,
+        .timeline-node:not(.historical) .timeline-value {
+            color: var(--accent);
+        }
+
+        /* --- COLLAPSIBLE REFERENCES STYLING --- */
+        .panel-references {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255,255,255,0.6);
+        }
+
+        .panel-references summary {
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 700;
+            outline: none;
+            color: rgba(255,255,255,0.8);
+            transition: color 0.2s ease;
+            user-select: none;
+        }
+
+        .panel-references summary:hover { color: var(--accent); }
+
+        .panel-references p {
+            font-size: 0.85rem !important;
+            margin-top: 15px !important;
+            line-height: 1.4 !important;
+            word-break: break-all;
+        }
+
+        .close-panel {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(0,0,0,0.5); 
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex; justify-content: center; align-items: center;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .close-panel:hover { background: rgba(0,0,0,0.8); transform: scale(1.1); }
+
+        .panel-text::-webkit-scrollbar { width: 8px; }
+        .panel-text::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        .panel-text::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="screen-intro" class="presentation-screen slide-bg active-screen">
+        <h1>Åland's Circular Economy</h1>
+        <h2>Pioneering Sustainable Resource Management</h2>
+        <div class="presenter-names">Presented by: Benjamin Antman | Linn Ansalem | Benjamin Kastinen</div>
+        <div class="hint-text">Press Spacebar to Begin</div>
+    </div>
+
+    <div id="screen-map" class="presentation-screen">
+        <div id="main-viewport"></div>
+
+        <div id="interactive-overlay">
+            <div id="scene-intro-map">
+                <h1>Explore the Island</h1>
+                <p>Targeting Full Sustainability by <span class="highlight-stat">2051</span>. Click a destination to explore key sectors.</p>
+            </div>
+
+            <button class="hotspot-trigger" id="trigger-real-estate" onclick="openPanel('panel-real-estate')">
+                <div class="pulse"></div> <span class="hotspot-label">Real Estate Hub</span> 
+            </button>
+
+            <button class="hotspot-trigger" id="trigger-hotels" onclick="openPanel('panel-hotels')">
+                <div class="pulse"></div> <span class="hotspot-label">Sustainable Hotels</span> 
+            </button>
+
+            <button class="hotspot-trigger" id="trigger-services" onclick="openPanel('panel-services')">
+                <div class="pulse"></div> <span class="hotspot-label">Repair & Reuse Services</span> 
+            </button>
+        </div>
+
+        <div class="content-panel" id="panel-real-estate">
+            <div class="panel-image" style="background-image: url('image_1.jpg');"></div>
+            <div class="panel-text">
+                <h2>Commercial Real Estate</h2>
+                
+                <div class="stat-grid">
+                    <div class="stat-box full-width">
+                        <div class="number-wrapper">
+                            <span class="counter" data-target="108000">0</span>
+                            <span class="suffix">kg</span>
+                        </div>
+                        <div class="label">Cumulative Project Goal</div>
+                    </div>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="timeline-title">Building Materials Rescued Target</div>
+                    <div class="timeline">
+                        <div class="timeline-node historical">
+                            <div class="timeline-year">2025 (Partial)</div>
+                            <div class="timeline-value">12,000 kg</div>
+                        </div>
+                        <div class="timeline-node">
+                            <div class="timeline-year">2026 (Current)</div>
+                            <div class="timeline-value">32,000 kg</div>
+                        </div>
+                        <div class="timeline-node historical">
+                            <div class="timeline-year">2027 (Scaled)</div>
+                            <div class="timeline-value">40,000 kg</div>
+                        </div>
+                        <div class="timeline-node historical">
+                            <div class="timeline-year">2028 (Final)</div>
+                            <div class="timeline-value">24,000 kg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>The construction sector is traditionally a massive producer of waste. Åland is tackling this through regional cooperation and rethinking building materials as permanent assets.</p>
+                <ul>
+                    <li><strong>Waste to Value Project (2025–2028):</strong> An EU-funded initiative designed to systematically reduce virgin material use.</li>
+                    <li><strong>The Jomala Hub:</strong> Led by Emmaus Åland, this new facility serves as a massive drop-off and marketplace for leftover building materials.</li>
+                    <li><strong>Baltic Sea Impact:</strong> The policy recommendations developed here will be shared to influence circular practices across the entire Baltic Sea region.</li>
+                </ul>
+                
+                <details class="panel-references">
+                    <summary>View References</summary>
+                    <p>Central Baltic Programme (n.d.). Waste to Value - About project. Available at: https://centralbaltic.eu/project/waste-to-value/315-about-project/ [Accessed 10 Apr. 2026].<br><br>ReTuna Återbruksgalleria (n.d.). Waste to Value — Giving building materials a second life. Available at: https://www.retuna.se/english/waste-to-value [Accessed 10 Apr. 2026].</p>
+                </details>
+            </div>
+            <button class="close-panel" onclick="closePanels()">✕</button>
+        </div>
+
+        <div class="content-panel" id="panel-hotels">
+            <div class="panel-image" style="background-image: url('image_3.jpg');"></div>
+            <div class="panel-text">
+                <h2>Hotel & Accommodation</h2>
+                
+                <div class="stat-grid three-col">
+                    <div class="stat-box">
+                        <div class="number-wrapper">
+                            <span class="prefix">~</span>
+                            <span class="counter" data-target="220">0</span>
+                            <span class="suffix">k</span>
+                        </div>
+                        <div class="label">Annual Guest Nights</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number-wrapper">
+                            <span class="prefix">></span>
+                            <span class="counter" data-target="10000">0</span>
+                        </div>
+                        <div class="label">Skipped Cleanings</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number-wrapper">
+                            <span class="counter" data-target="90">0</span>
+                            <span class="suffix">+</span>
+                        </div>
+                        <div class="label">Years Lifespan (Svala)</div>
+                    </div>
+                </div>
+
+                <p>Tourism is vital to Åland, but it requires significant resources. The hospitality sector is combating this through stringent eco-certifications and innovative financial models.</p>
+                <ul>
+                    <li><strong>Smart Philanthropy:</strong> Ålandhotels donates €1 to the Keep the Archipelago Tidy Association for every skipped daily cleaning, generating <span class="highlight-stat">>€10,000 annually</span>.</li>
+                    <li><strong>Rigorous Eco-Certifications:</strong> Major commercial properties hold recognized labels like the <span class="highlight-stat">Nordic Swan</span> ecolabel and <span class="highlight-stat">Green Key</span>.</li>
+                    <li><strong>Heritage Reuse (Hotel Svala):</strong> An abandoned 1930s hospital in Kumlinge was entirely repurposed into a modern hotel using a strict low-waste ethos.</li>
+                </ul>
+
+                <details class="panel-references">
+                    <summary>View References</summary>
+                    <p>Ålandhotels (n.d.). Sustainability. Available at: https://www.alandhotels.fi [Accessed 10 Apr. 2026].<br><br>Håll Skärgården Ren rf. (2023). Årsberättelse 2023. Available at: hallskargardenren.fi [Accessed 10 Apr. 2026].<br><br>Hotel Svala (n.d.). Hotel Svala - Kumlinge. Available at: https://thehotelsvala.com [Accessed 10 Apr. 2026].<br><br>ÅSUB (Ålands statistik- och utredningsbyrå). Tourism Statistics. Available at: asub.ax [Accessed 10 Apr. 2026].</p>
+                </details>
+            </div>
+            <button class="close-panel" onclick="closePanels()">✕</button>
+        </div>
+
+        <div class="content-panel" id="panel-services">
+            <div class="panel-image" style="background-image: url('image_2.jpeg');"></div>
+            <div class="panel-text">
+                <h2>The Service Industry</h2>
+                
+                <div class="stat-grid">
+                    <div class="stat-box full-width">
+                        <div class="number-wrapper">
+                            <span class="counter" data-target="62">0</span>
+                            <span class="suffix">%</span>
+                        </div>
+                        <div class="label">Locally Resold Goods</div>
+                    </div>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="timeline-title">Donated Goods Processed</div>
+                    <div class="timeline">
+                        <div class="timeline-node historical">
+                            <div class="timeline-year">2021 (Est.)</div>
+                            <div class="timeline-value">435,000 kg</div>
+                        </div>
+                        <div class="timeline-node historical">
+                            <div class="timeline-year">2022 (Actual)</div>
+                            <div class="timeline-value">446,000 kg</div>
+                        </div>
+                        <div class="timeline-node historical">
+                            <div class="timeline-year">2023 (Actual)</div>
+                            <div class="timeline-value">440,000 kg</div>
+                        </div>
+                        <div class="timeline-node historical">
+                            <div class="timeline-year">2024 (Target)</div>
+                            <div class="timeline-value">450,000 kg</div>
+                        </div>
+                        <div class="timeline-node">
+                            <div class="timeline-year">2025 (Projected Capacity)</div>
+                            <div class="timeline-value">460,000 kg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>A true circular economy requires that consumer goods remain in circulation. Åland's service sector is proving that "used" is simply a state of transition.</p>
+                <ul>
+                    <li><strong>Skill Building Workshops:</strong> The organization hosts active repair and reuse workshops, teaching locals the skills needed to fix clothing and refurbish furniture.</li>
+                    <li><strong>Social Circularity:</strong> These service centers provide crucial work integration, combining environmental sustainability with social sustainability.</li>
+                </ul>
+
+                <details class="panel-references">
+                    <summary>View References</summary>
+                    <p>Central Baltic Programme (n.d.). Waste to Value. Available at: https://centralbaltic.eu/project/waste-to-value/315-about-project/ [Accessed 10 Apr. 2026].<br><br>Emmaus Åland. (2023). Verksamhetsberättelse 2022. Available at: emmaus.ax [Accessed 10 Apr. 2026].<br><br>Emmaus Åland. (2024). Verksamhetsplan 2024 & 2025. Available at: emmaus.ax [Accessed 10 Apr. 2026].</p>
+                </details>
+            </div>
+            <button class="close-panel" onclick="closePanels()">✕</button>
+        </div>
+    </div>
+
+    <div id="screen-end" class="presentation-screen slide-bg">
+        <h1>Thank You!</h1>
+        <h2>Any Questions?</h2>
+        <div class="hint-text">Press Left Arrow to return to the map</div>
+    </div>
+
+    <script>
+        const viewport = document.getElementById('main-viewport');
+        const overlay = document.getElementById('interactive-overlay');
+        const panels = document.querySelectorAll('.content-panel');
+
+        // Number Counter Animation Logic
+        function animateCounters(panelId) {
+            const panel = document.getElementById(panelId);
+            const counters = panel.querySelectorAll('.counter');
+            
+            counters.forEach(counter => {
+                counter.innerText = '0'; // Reset on open
+                const target = parseFloat(counter.getAttribute('data-target'));
+                const duration = 1500; // 1.5 seconds to count up
+                const steps = 60;
+                const increment = target / steps;
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if(current >= target) {
+                        clearInterval(timer);
+                        counter.innerText = target.toLocaleString();
+                    } else {
+                        counter.innerText = Math.ceil(current).toLocaleString();
+                    }
+                }, duration / steps);
+            });
+        }
+
+        function openPanel(panelId) {
+            viewport.classList.add('blur');
+            overlay.classList.add('hidden');
+            panels.forEach(panel => panel.classList.remove('active'));
+            document.getElementById(panelId).classList.add('active');
+            
+            // Trigger animation
+            animateCounters(panelId);
+        }
+
+        function closePanels() {
+            viewport.classList.remove('blur');
+            overlay.classList.remove('hidden');
+            panels.forEach(panel => panel.classList.remove('active'));
+            
+            document.querySelectorAll('.panel-references').forEach(details => {
+                details.removeAttribute('open');
+            });
+        }
+
+        viewport.addEventListener('click', function(e) {
+            if (this.classList.contains('blur')) {
+                closePanels();
+            }
+        });
+
+        // Slide Logic
+        const screens = ['screen-intro', 'screen-map', 'screen-end'];
+        let currentScreenIndex = 0;
+
+        document.addEventListener('keydown', function(event) {
+            let isPanelActive = document.querySelector('.content-panel.active') !== null;
+
+            if (isPanelActive && (event.key === 'Escape' || event.key === ' ' || event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+                closePanels();
+                return;
+            }
+
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                if (currentScreenIndex < screens.length - 1) {
+                    currentScreenIndex++;
+                    updateScreens();
+                }
+            } else if (event.key === 'ArrowLeft') {
+                if (currentScreenIndex > 0) {
+                    currentScreenIndex--;
+                    updateScreens();
+                }
+            }
+        });
+
+        function updateScreens() {
+            screens.forEach(id => {
+                document.getElementById(id).classList.remove('active-screen');
+            });
+            document.getElementById(screens[currentScreenIndex]).classList.add('active-screen');
+        }
+    </script>
+</body>
+</html>
