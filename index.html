@@ -31,6 +31,31 @@
             align-items: center;
         }
 
+        /* --- FULLSCREEN BUTTON --- */
+        #fullscreen-btn {
+            position: absolute;
+            top: 20px; 
+            right: 20px;
+            background: rgba(0,0,0,0.5); 
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            width: 45px; 
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            transition: background 0.2s, transform 0.2s;
+            z-index: 1000;
+        }
+
+        #fullscreen-btn:hover { 
+            background: rgba(0,0,0,0.8); 
+            transform: scale(1.1); 
+        }
+
         /* --- PRESENTATION SCREEN MANAGER --- */
         .presentation-screen {
             position: absolute;
@@ -500,6 +525,8 @@
 </head>
 <body>
 
+    <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+
     <div id="screen-intro" class="presentation-screen slide-bg active-screen">
         <h1>Åland's Circular Economy</h1>
         <div class="presenter-names">Presented by: Benjamin Antman | Linn Amsalem | Benjamin Kastinen</div>
@@ -724,6 +751,30 @@
     </div>
 
     <script>
+        // --- Fullscreen Logic ---
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch((err) => {
+                    console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '✖';
+                fullscreenBtn.title = 'Exit Fullscreen';
+            } else {
+                fullscreenBtn.innerHTML = '⛶';
+                fullscreenBtn.title = 'Toggle Fullscreen';
+            }
+        });
+
+        // --- Presentation Logic ---
         const viewport = document.getElementById('main-viewport');
         const overlay = document.getElementById('interactive-overlay');
         const panels = document.querySelectorAll('.content-panel');
